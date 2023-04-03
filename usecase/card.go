@@ -3,6 +3,7 @@ package usecase
 import (
 	"fmt"
 	"github.com/shopspring/decimal"
+	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm/utils"
 	"shopChallenge/domain"
 	"strconv"
@@ -11,15 +12,11 @@ import (
 )
 
 func (u UseCaseImpl) Transfer(
-	req *domain.TransferRequest) error {
-	fmt.Println("___________", req)
+	req *domain.TransferRequest) (err error) {
 	req.ConvertToEnglishNo()
-	fmt.Println("___________", req)
 	txn := domain.Transactions{
 		IsActive: true,
 	}
-	var err error
-	fmt.Println("___________", req.TargetCardNo)
 	txn.Amount, err = decimal.NewFromString(req.Amount)
 	txn.ToCardID, err = strconv.Atoi(req.TargetCardNo)
 	txn.CardID, err = strconv.Atoi(req.SourceCardNo)
@@ -38,6 +35,21 @@ func (u UseCaseImpl) Transfer(
 		return err
 	}
 
+	err = u.Repo.StartTransaction()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		errF := u.Repo.FinalizeTransaction(err)
+		if errF != nil {
+			log.WithFields(log.Fields{
+				"error":         err,
+				"FinalizeError": errF,
+			}).Error("Finalize transaction error")
+			err = errF
+			return
+		}
+	}()
 	err = u.transfer(&TransferAccountRequest{
 		Amount:    txn.Amount,
 		SourceAcc: &txn.Card.Account,

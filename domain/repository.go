@@ -11,4 +11,7 @@ type Repo interface {
 	ReadTransactionRules(transaction string) (TransactionRules, error)
 
 	UpdateAccount(account Accounts) error
+
+	StartTransaction() error
+	FinalizeTransaction(err error) error
 }
