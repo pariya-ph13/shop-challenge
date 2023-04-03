@@ -1,22 +1,28 @@
 package repository
 
-import "fmt"
+import (
+	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
+	"shopChallenge/domain"
+)
 
 func (r *RepoImpl) StartTransaction() error {
-	r.db.Begin()
-	if r.db.Error != nil {
-		return nil
+	r.DB.Begin()
+	if r.DB.Error != nil {
+		log.Error("Start txn err:", r.DB.Error)
+		return domain.ErrNoStartTxn
 	}
-	return r.db.Error
+	return nil
 }
 
 func (r *RepoImpl) FinalizeTransaction(err error) error {
 	if err == nil {
-		fmt.Println("commit part", err)
-		r.db.Commit()
-		return r.db.Error
+		r.DB.Commit()
+		return r.DB.Error
 	}
-	r.db.Rollback()
-	fmt.Println("rollback ----", err)
-	return r.db.Error
+	return r.DB.Error
+}
+
+func (r RepoImpl) GetTxn() *gorm.DB {
+	return r.DB
 }

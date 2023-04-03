@@ -1,7 +1,7 @@
 package party
 
 import (
-	"fmt"
+	log "github.com/sirupsen/logrus"
 	dm "shopChallenge/domain"
 	"shopChallenge/thirdparty/domain"
 )
@@ -12,10 +12,10 @@ func InitSMS(smsConfig domain.Config) domain.SMS {
 	sms := initiatorSMS{}
 	if smsConfig.Kavenegar.Active {
 		sms.SetNext(kavenegar)
-		fmt.Println("kave created")
+		log.Info("kavenegar sms service is activated")
 	}
 	if smsConfig.Ghasedak.Active {
-		fmt.Println("ghasedak created")
+		log.Info("Ghasedak sms service is activated")
 		sms.SetNext(ghasedak)
 	}
 	return &sms

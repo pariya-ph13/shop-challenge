@@ -10,11 +10,8 @@ func (r RepoImpl) ReadCard(
 
 	card := domain.Cards{}
 
-	db := r.db.Where("card_id = ?", cardNo)
+	db := r.DB.Where("card_id = ?", cardNo)
 	r.readRelatedToCard(db, c)
-	//Joins("Account").
-	//Preload("Account.Customer")
-	//Joins("LEFT JOIN Customers \"Customer\" on \"Account\".customer_id = \"Customer\".customer_id").
 
 	res := db.Find(&card)
 	if res.Error != nil {

@@ -1,7 +1,6 @@
 package delivery
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"shopChallenge/domain"
 )
@@ -31,7 +30,6 @@ func (d *DataHandlerImpl) TransferMoney(
 		})
 		return
 	}
-	fmt.Println("++++++transition request is:", req)
 	err := d.usecase.Transfer(&req)
 	if err != nil {
 		ctx.JSON(500, gin.H{

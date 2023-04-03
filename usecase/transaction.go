@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"fmt"
 	"shopChallenge/domain"
 )
 
@@ -28,7 +27,6 @@ func (u UseCaseImpl) GetLatestTXNsOfMostActiveUsers() ([]domain.LatestTXn, error
 		}
 		s[i].Transactions = append(s[i].Transactions, c...)
 	}
-	fmt.Println(c)
 	return s, nil
 }
 

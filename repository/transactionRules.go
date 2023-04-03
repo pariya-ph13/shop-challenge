@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"fmt"
+	log "github.com/sirupsen/logrus"
 	"shopChallenge/domain"
 )
 
@@ -10,10 +10,10 @@ func (r RepoImpl) ReadTransactionRules(
 
 	txnRule := domain.TransactionRules{Transaction: transaction}
 
-	res := r.db.Where("transaction = ?", transaction).
+	res := r.DB.Where("transaction = ?", transaction).
 		Find(&txnRule)
-	fmt.Println("-----rules:", txnRule)
 	if res.Error != nil {
+		log.Error("transactionRules:", res.Error)
 		return domain.TransactionRules{}, domain.ErrReadTransactionRules
 	}
 	return txnRule, nil

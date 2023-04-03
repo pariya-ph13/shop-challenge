@@ -1,9 +1,9 @@
 package usecase
 
 import (
-	"fmt"
 	"github.com/shopspring/decimal"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 	"gorm.io/gorm/utils"
 	"shopChallenge/domain"
 	"strconv"
@@ -35,41 +35,48 @@ func (u UseCaseImpl) Transfer(
 		return err
 	}
 
-	err = u.Repo.StartTransaction()
-	if err != nil {
-		return err
-	}
-	defer func() {
-		errF := u.Repo.FinalizeTransaction(err)
-		if errF != nil {
-			log.WithFields(log.Fields{
-				"error":         err,
-				"FinalizeError": errF,
-			}).Error("Finalize transaction error")
-			err = errF
-			return
+	//err = u.Repo.StartTransaction()
+	//if err != nil {
+	//	return err
+	//}
+	//defer func() {
+	//	errF := u.Repo.FinalizeTransaction(err)
+	//	if errF != nil {
+	//		log.WithFields(log.Fields{
+	//			"error":         err,
+	//			"FinalizeError": errF,
+	//		}).Error("Finalize transaction error")
+	//		err = errF
+	//		return
+	//	}
+	//}()
+	smstxn := domain.Transactions{}
+	err = u.Repo.GetTxn().Transaction(func(tx *gorm.DB) error {
+		err = u.transfer(&TransferAccountRequest{
+			Amount:    txn.Amount,
+			SourceAcc: &txn.Card.Account,
+			TargetAcc: &txn.ToCard.Account,
+		})
+		if err != nil {
+			return err
 		}
-	}()
-	err = u.transfer(&TransferAccountRequest{
-		Amount:    txn.Amount,
-		SourceAcc: &txn.Card.Account,
-		TargetAcc: &txn.ToCard.Account,
+		smstxn = txn
+		err = u.InsertTransactions(txn)
+		//test txn
+		if err != nil {
+			return err
+		}
+		return nil
 	})
 	if err != nil {
 		return err
 	}
 
-	err = u.sendMessageToCustomers(&txn, &txnRules)
+	err = u.sendMessageToCustomers(&smstxn, &txnRules)
 	if err != nil {
-		return err
+		log.Error("smsError:", err)
 	}
-
-	err = u.InsertTransactions(txn)
-	if err != nil {
-		return err
-	}
-
-	return err
+	return nil
 }
 
 func (u UseCaseImpl) InsertTransactions(txn domain.Transactions) error {
@@ -136,17 +143,14 @@ func (u UseCaseImpl) fromCardValidation(c *card) error {
 		return err
 	}
 
-	fmt.Println("@@@ok error", c.amount, c.rules.MinLimit, c.rules.MaxLimit)
 	if (!c.rules.MinLimit.IsZero() && c.amount.LessThan(c.rules.MinLimit)) ||
 		(!c.rules.MaxLimit.IsZero() && c.amount.GreaterThan(c.rules.MaxLimit)) {
-		fmt.Println("!!!!slimit error", c.amount, c.rules.MinLimit, c.rules.MaxLimit)
 		return domain.ErrAmountNotInRange
 	}
 	return nil
 }
 
 func (u UseCaseImpl) ToCardValidation(card *card) error {
-	fmt.Println("++++", card.CardID)
 	if !card.CheckCardNumber() {
 		return domain.ErrNotValidToCard
 	}
@@ -158,7 +162,6 @@ func (u UseCaseImpl) ToCardValidation(card *card) error {
 		},
 	}
 	card.Cards, err = u.Repo.ReadCard(card.CardID, ac)
-	fmt.Println("&&&&", card.Cards)
 	if err != nil {
 		return err
 	}
@@ -192,10 +195,7 @@ func (u UseCaseImpl) sendMessageToCustomers(
 	}
 	message := toCard.prepareSMS(rules.TemplateSms)
 	_ = u.Sms.SendMessage(message, toCard.Account.Customer.MobileNumber)
-	//if err != nil {
-	//	return err
-	//}
-	fmt.Println("_____________________________")
+	log.Error("error on sending ToCard sms...")
 	fromCard := card{
 		Cards:  *txn.ToCard,
 		rules:  *rules,
@@ -203,9 +203,7 @@ func (u UseCaseImpl) sendMessageToCustomers(
 	}
 	message = fromCard.prepareSMS(rules.TemplateSms)
 	_ = u.Sms.SendMessage(message, fromCard.Account.Customer.MobileNumber)
-	//if err != nil {
-	//	return err
-	//}
+	log.Error("error on sending FromCard sms...")
 	return nil
 }
 

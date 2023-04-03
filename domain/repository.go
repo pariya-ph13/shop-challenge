@@ -1,5 +1,7 @@
 package domain
 
+import "gorm.io/gorm"
+
 type Repo interface {
 	InsertTransaction(transactions Transactions) error
 	GetLatestTXNsOfActiveUsers() ([]LatestInfo, error)
@@ -14,4 +16,5 @@ type Repo interface {
 
 	StartTransaction() error
 	FinalizeTransaction(err error) error
+	GetTxn() *gorm.DB
 }
