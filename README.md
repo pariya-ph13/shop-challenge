@@ -35,4 +35,4 @@ the withdrawal and deposit txns will be saved independently of the other account
 | 6104337743428383     | 6037703932049631  | -50000 |
 
 also the related features of transactions(in this scenario transfer) will
-be save on transactionRule table(like fee, sms template, transaction limits)
+be saved on transactionRule table(like fee, sms template, transaction limits)
