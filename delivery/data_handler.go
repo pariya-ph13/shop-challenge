@@ -23,7 +23,6 @@ func (d *DataHandlerImpl) GetLatestTXNsOfMostActiveUsers(
 
 func (d *DataHandlerImpl) TransferMoney(
 	ctx *gin.Context) {
-	fmt.Println("------------------------")
 	var req domain.TransferRequest
 	if err := ctx.BindJSON(&req); err != nil {
 		ctx.JSON(400, gin.H{
@@ -33,7 +32,7 @@ func (d *DataHandlerImpl) TransferMoney(
 		return
 	}
 	fmt.Println("++++++transition request is:", req)
-	err := d.usecase.Transfer(req)
+	err := d.usecase.Transfer(&req)
 	if err != nil {
 		ctx.JSON(500, gin.H{
 			"message": "transaction is failed!.",

@@ -11,13 +11,18 @@ import (
 )
 
 func (u UseCaseImpl) Transfer(
-	req domain.TransferRequest) error {
+	req *domain.TransferRequest) error {
+	fmt.Println("___________", req)
+	req.ConvertToEnglishNo()
+	fmt.Println("___________", req)
 	txn := domain.Transactions{
-		CardID:   req.SourceCardNo,
-		ToCardID: req.TargetCardNo,
-		Amount:   req.Amount,
 		IsActive: true,
 	}
+	var err error
+	fmt.Println("___________", req.TargetCardNo)
+	txn.Amount, err = decimal.NewFromString(req.Amount)
+	txn.ToCardID, err = strconv.Atoi(req.TargetCardNo)
+	txn.CardID, err = strconv.Atoi(req.SourceCardNo)
 
 	txnRules, err := u.Repo.ReadTransactionRules("transfer")
 	if err != nil {
@@ -32,8 +37,6 @@ func (u UseCaseImpl) Transfer(
 	if err != nil {
 		return err
 	}
-	fmt.Println("b- s---->", txn.Card.Account)
-	fmt.Println("b- t---->", txn.ToCard.Account)
 
 	err = u.transfer(&TransferAccountRequest{
 		Amount:    txn.Amount,
@@ -43,8 +46,6 @@ func (u UseCaseImpl) Transfer(
 	if err != nil {
 		return err
 	}
-	fmt.Println("a- s---->", txn.Card.Account)
-	fmt.Println("a- t---->", txn.ToCard.Account)
 
 	err = u.sendMessageToCustomers(&txn, &txnRules)
 	if err != nil {
@@ -197,7 +198,6 @@ func (u UseCaseImpl) sendMessageToCustomers(
 }
 
 func (c card) prepareSMS(template string) string {
-	fmt.Println("bf ", template)
 	functionality := "deposit"
 	if c.amount.LessThan(decimal.Zero) {
 		functionality = "withdrawal"
@@ -210,7 +210,6 @@ func (c card) prepareSMS(template string) string {
 		"FEE", c.rules.Fee.String(),
 		"DATE", time.Now().Format(time.RFC822Z),
 	)
-	fmt.Println("af ", replacer.Replace(template))
 	return replacer.Replace(template)
 }
 
@@ -221,16 +220,13 @@ func (f *finalAmount) applyRules(
 
 func (c card) CheckCardNumber() bool {
 	cr := utils.ToString(c.CardID)
-	fmt.Println("cr:", cr)
 	if len(cr) != 16 {
-		fmt.Println("false")
 		return false
 	}
 	var cardTotal int64 = 0
 	for i, ch := range cr {
 		c, err := strconv.ParseInt(string(ch), 10, 8)
 		if err != nil {
-			fmt.Println("false2")
 			return false
 		}
 		if i%2 == 0 {
@@ -243,6 +239,5 @@ func (c card) CheckCardNumber() bool {
 			cardTotal += c
 		}
 	}
-	fmt.Println("false3", cardTotal%10 == 0)
 	return cardTotal%10 == 0
 }

@@ -32,7 +32,6 @@ func main() {
 	if err != nil {
 		panic("cannot unmarshal thirdparty config")
 	}
-	fmt.Println(thirdparyConfig, " !!!")
 	sms := party.InitSMS(thirdparyConfig)
 
 	useCase := usecase.NewUseCase(repo, sms)
@@ -70,6 +69,7 @@ func executeDbMigrations() {
 		log.Error(errors.Wrap(err, "error on apply migrations"))
 		panic("failed to apply migrations")
 	}
+	log.Info("DB migrations done.")
 }
 
 func getGormDb() *gorm.DB {

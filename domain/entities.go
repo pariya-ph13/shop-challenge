@@ -2,6 +2,7 @@ package domain
 
 import (
 	"github.com/shopspring/decimal"
+	"strings"
 	"time"
 )
 
@@ -82,10 +83,11 @@ func (Transactions) TableName() string {
 }
 
 type TransferRequest struct {
-	SourceCardNo int             `json:"sourceCardNo"`
-	TargetCardNo int             `json:"targetCardNo"`
-	Amount       decimal.Decimal `json:"amount"`
+	SourceCardNo string `json:"sourceCardNo"`
+	TargetCardNo string `json:"targetCardNo"`
+	Amount       string `json:"amount"`
 }
+
 type LatestInfo struct {
 	CardID int
 	Count  int
@@ -110,14 +112,22 @@ type CustomerAccess struct {
 	Contained bool
 }
 
-/*
-	c := domain.CardAccess{
-		Contained: true,
-		AccountAccess: domain.AccountAccess{
-			Contained: true,
-			CustomerAccess: domain.CustomerAccess{
-				Contained: true,
-			},
-		},
-	}
-*/
+type converter string
+
+func (t *TransferRequest) ConvertToEnglishNo() {
+	t.Amount = converter(t.Amount).convertToEnglishNo()
+	t.TargetCardNo = converter(t.TargetCardNo).convertToEnglishNo()
+	t.SourceCardNo = converter(t.SourceCardNo).convertToEnglishNo()
+}
+
+func (c converter) convertToEnglishNo() string {
+	replacer := strings.NewReplacer(
+		//persian
+		"۰", "0", "۱", "1", "۲", "2", "۳", "3", "۴", "4",
+		"۵", "5", "۶", "6", "۷", "7", "۸", "8", "۹", "9",
+		// arabic
+		"٠", "0", "١", "1", "٢", "2", "٣", "3", "٤", "4",
+		"٥", "5", "٦", "6", "٧", "7", "٨", "8", "٩", "9",
+	)
+	return replacer.Replace(string(c))
+}

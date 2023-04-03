@@ -8,8 +8,8 @@ import (
 
 func (r RepoImpl) InsertTransaction(
 	transactions domain.Transactions) error {
-	transactions.Card = &domain.Cards{}
-	transactions.ToCard = &domain.Cards{}
+	transactions.Card = nil
+	transactions.ToCard = nil
 	res := r.db.Create(&transactions)
 	if res.Error != nil {
 		return domain.ErrInsertTransaction
