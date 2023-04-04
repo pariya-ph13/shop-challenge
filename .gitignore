@@ -30,8 +30,5 @@ go.work
 .AppleDouble
 .LSOverride
 
-
-*config.yaml*
-
 /docs
 !/docs/init.go

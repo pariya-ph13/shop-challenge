@@ -1,0 +1,14 @@
+grpc_port: "9001"
+gin_mode: "debug"
+pg:
+  migrate_src: postgres://pariya@localhost:5432/shop?sslmode=disable&search_path=public
+  src: host=localhost user=pariya dbname=shop sslmode=disable password=
+
+thirdparty:
+  kavenegar:
+    apikey: 4F6A3550653963723131427543736B756A334A38784F7934696F5830514D7742666678505267387A704B453D
+    active: true
+  ghasedak:
+    apikey: 4F6A3550653963723131427543736B756A334A38784F7934696F5830514D7742666678505267387A704B453D
+    active: false
+

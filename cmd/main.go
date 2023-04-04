@@ -41,8 +41,7 @@ func main() {
 	executeDbMigrations()
 	router := gin.New()
 	setRoute(router, &handler)
-
-	router.Run(":9001")
+	router.Run(":" + viper.GetString("grpc_port"))
 }
 
 func setUpConfig() {
